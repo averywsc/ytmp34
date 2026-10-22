@@ -1,0 +1,746 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050505">
+  <meta name="description" content="Convert a video link to an MP3 or MP4 file on your own machine.">
+  <title>YTMP34 — Video converter</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #050505;
+      color: #f4f4f4;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      --sidebar-width: 252px;
+      --surface: #0a0a0a;
+      --line: #202020;
+      --muted: #858585;
+      --accent: #d5ff75;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      background:
+        radial-gradient(ellipse at 78% 15%, rgb(255 255 255 / 3%), transparent 38%),
+        #050505;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 2;
+      display: flex;
+      width: var(--sidebar-width);
+      flex-direction: column;
+      padding: 32px 22px 22px;
+      border-right: 1px solid #181818;
+      background: #050505;
+    }
+
+    .brand {
+      display: inline-flex;
+      width: fit-content;
+      align-items: center;
+      gap: 10px;
+      padding: 3px 9px;
+      color: #f4f4f4;
+      font-size: 14px;
+      font-weight: 650;
+      letter-spacing: -0.04em;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 27px;
+      height: 27px;
+      place-items: center;
+      border: 1px solid #303030;
+      border-radius: 8px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .nav-caption {
+      margin: 57px 0 11px;
+      padding-left: 10px;
+      color: #666;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .navigation {
+      display: grid;
+      gap: 5px;
+    }
+
+    .navigation button {
+      display: flex;
+      width: 100%;
+      min-height: 40px;
+      align-items: center;
+      gap: 11px;
+      padding: 0 10px;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      background: transparent;
+      color: #929292;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 520;
+      text-align: left;
+      transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
+    }
+
+    .navigation button:hover {
+      color: #fff;
+    }
+
+    .navigation button[aria-current="true"] {
+      border-color: #242424;
+      background: #101010;
+      color: #f5f5f5;
+    }
+
+    .nav-icon {
+      width: 18px;
+      color: #777;
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .navigation button[aria-current="true"] .nav-icon {
+      color: var(--accent);
+    }
+
+    .sidebar-footer {
+      display: grid;
+      gap: 8px;
+      margin-top: auto;
+      padding: 14px 10px 5px;
+      border-top: 1px solid #1c1c1c;
+    }
+
+    .local-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #c5c5c5;
+      font-size: 11px;
+      font-weight: 550;
+    }
+
+    .local-indicator::before {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgb(213 255 117 / 28%);
+      content: "";
+    }
+
+    .sidebar-footer small {
+      color: #696969;
+      font-size: 10px;
+      line-height: 1.6;
+    }
+
+    main {
+      display: flex;
+      min-height: 100vh;
+      flex-direction: column;
+      margin-left: var(--sidebar-width);
+    }
+
+    .topbar {
+      display: flex;
+      min-height: 68px;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 clamp(24px, 5vw, 72px);
+      border-bottom: 1px solid #181818;
+    }
+
+    .topbar-label {
+      color: #858585;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.01em;
+    }
+
+    .topbar-label span {
+      padding: 0 8px;
+      color: #444;
+    }
+
+    .content {
+      width: min(100%, 1020px);
+      margin: auto;
+      padding: 94px clamp(24px, 8vw, 110px) 110px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #a4a4a4;
+      font-size: 11px;
+      font-weight: 550;
+    }
+
+    .eyebrow-mark {
+      color: var(--accent);
+      font-size: 15px;
+    }
+
+    h1 {
+      margin: 21px 0 13px;
+      color: #f6f6f6;
+      font-size: clamp(38px, 5.7vw, 62px);
+      font-weight: 590;
+      letter-spacing: -0.075em;
+      line-height: 1.03;
+    }
+
+    .intro {
+      max-width: 520px;
+      margin: 0;
+      color: #929292;
+      font-size: 14px;
+      line-height: 1.8;
+    }
+
+    .converter {
+      margin-top: 38px;
+      padding: clamp(20px, 3vw, 30px);
+      border: 1px solid #262626;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #0d0d0d, #090909 65%);
+      box-shadow: 0 22px 70px rgb(0 0 0 / 35%);
+    }
+
+    .card-heading {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 26px;
+    }
+
+    .card-heading h2 {
+      margin: 0 0 6px;
+      color: #ededed;
+      font-size: 14px;
+      font-weight: 580;
+      letter-spacing: -0.025em;
+    }
+
+    .card-heading p {
+      margin: 0;
+      color: #777;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .quality-badge {
+      padding: 6px 9px;
+      border: 1px solid #282828;
+      border-radius: 5px;
+      color: #a2a2a2;
+      font-size: 10px;
+      font-weight: 550;
+      white-space: nowrap;
+    }
+
+    .field-label,
+    .format-label {
+      display: block;
+      margin: 0 0 9px;
+      color: #bdbdbd;
+      font-size: 11px;
+      font-weight: 550;
+    }
+
+    .url-input {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 14px;
+      border: 1px solid #303030;
+      border-radius: 7px;
+      outline: none;
+      background: #070707;
+      color: #f1f1f1;
+      font-size: 13px;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .url-input::placeholder {
+      color: #606060;
+    }
+
+    .url-input:focus {
+      border-color: #727272;
+      box-shadow: 0 0 0 3px rgb(255 255 255 / 4%);
+    }
+
+    .format-area {
+      margin-top: 23px;
+    }
+
+    .format-options {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .format-option {
+      display: flex;
+      min-height: 67px;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border: 1px solid #282828;
+      border-radius: 8px;
+      background: #080808;
+      color: #e9e9e9;
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 140ms ease, background 140ms ease;
+    }
+
+    .format-option:hover {
+      border-color: #454545;
+    }
+
+    .format-option[aria-pressed="true"] {
+      border-color: #777;
+      background: #111;
+      box-shadow: inset 0 0 0 1px rgb(255 255 255 / 2%);
+    }
+
+    .format-icon {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      flex: 0 0 auto;
+      place-items: center;
+      border: 1px solid #282828;
+      border-radius: 7px;
+      color: var(--accent);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+    }
+
+    .format-copy {
+      display: grid;
+      gap: 4px;
+    }
+
+    .format-copy strong {
+      color: #e8e8e8;
+      font-size: 12px;
+      font-weight: 580;
+    }
+
+    .format-copy small {
+      color: #777;
+      font-size: 10px;
+    }
+
+    .convert-button {
+      display: flex;
+      width: 100%;
+      min-height: 47px;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 22px;
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      background: var(--accent);
+      color: #111;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 650;
+      transition: background 140ms ease, transform 140ms ease, opacity 140ms ease;
+    }
+
+    .convert-button:hover:not(:disabled) {
+      background: #e2ff9f;
+      transform: translateY(-1px);
+    }
+
+    .convert-button:disabled {
+      cursor: wait;
+      opacity: 0.7;
+    }
+
+    .button-arrow {
+      font-size: 16px;
+      font-weight: 450;
+    }
+
+    .form-status {
+      min-height: 18px;
+      margin: 13px 0 0;
+      color: #929292;
+      font-size: 11px;
+      line-height: 1.65;
+    }
+
+    .form-status[data-state="error"] {
+      color: #ff9696;
+    }
+
+    .form-status[data-state="success"] {
+      color: var(--accent);
+    }
+
+    .privacy-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 9px;
+      margin: 17px 2px 0;
+      color: #777;
+      font-size: 10px;
+      line-height: 1.75;
+    }
+
+    .privacy-icon {
+      flex: 0 0 auto;
+      color: #aaa;
+    }
+
+    .page-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 46px;
+      color: #5f5f5f;
+      font-size: 10px;
+    }
+
+    .page-footer a {
+      color: #888;
+      text-decoration: none;
+    }
+
+    .page-footer a:hover {
+      color: #ddd;
+    }
+
+    @media (min-width: 1100px) {
+      .content {
+        padding-right: 100px;
+        padding-left: 100px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      :root {
+        --sidebar-width: 0px;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0;
+        width: 100%;
+        height: auto;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 16px;
+        border-right: 0;
+        border-bottom: 1px solid #1c1c1c;
+      }
+
+      .brand {
+        gap: 8px;
+        padding-left: 0;
+      }
+
+      .nav-caption,
+      .sidebar-footer {
+        display: none;
+      }
+
+      .navigation {
+        display: flex;
+        gap: 5px;
+      }
+
+      .navigation button {
+        width: auto;
+        min-height: 35px;
+        gap: 6px;
+        padding: 0 8px;
+        font-size: 10px;
+      }
+
+      .nav-icon {
+        width: auto;
+        font-size: 11px;
+      }
+
+      main {
+        min-height: calc(100vh - 59px);
+      }
+
+      .topbar {
+        min-height: 48px;
+        padding: 0 20px;
+      }
+
+      .content {
+        width: 100%;
+        padding: 75px 24px 54px;
+      }
+    }
+
+    @media (max-width: 440px) {
+      .brand {
+        font-size: 12px;
+      }
+
+      .brand-mark {
+        width: 25px;
+        height: 25px;
+      }
+
+      .navigation {
+        gap: 3px;
+      }
+
+      .navigation button {
+        min-height: 32px;
+        gap: 4px;
+        padding: 0 6px;
+        font-size: 9px;
+      }
+
+      .format-options {
+        grid-template-columns: 1fr;
+      }
+
+      .format-option {
+        min-height: 59px;
+      }
+
+      .card-heading {
+        flex-direction: column;
+      }
+
+      .content {
+        padding: 58px 18px 40px;
+      }
+
+      .page-footer {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/" aria-label="YTMP34 home">
+      <span class="brand-mark" aria-hidden="true">Y</span>
+      <span>ytmp34</span>
+    </a>
+
+    <p class="nav-caption">Converter</p>
+    <nav class="navigation" aria-label="Choose conversion format">
+      <button type="button" data-format="mp3" aria-current="false">
+        <span class="nav-icon" aria-hidden="true">♫</span>
+        YouTube to MP3
+      </button>
+      <button type="button" data-format="mp4" aria-current="true">
+        <span class="nav-icon" aria-hidden="true">▶</span>
+        YouTube to MP4
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="local-indicator">Running locally</div>
+      <small>Your conversions are processed by this application.</small>
+    </div>
+  </aside>
+
+  <main>
+    <header class="topbar">
+      <div class="topbar-label">Tools <span>/</span> Video converter</div>
+    </header>
+
+    <div class="content">
+      <div class="eyebrow"><span class="eyebrow-mark" aria-hidden="true">✳</span> SIMPLE VIDEO CONVERSION</div>
+      <h1>Video to file.<br>Ready when you are.</h1>
+      <p class="intro">Paste a video link, choose your format, and save it straight to your device. No extra steps.</p>
+
+      <section class="converter" aria-labelledby="converter-title">
+        <div class="card-heading">
+          <div>
+            <h2 id="converter-title">Start a conversion</h2>
+            <p id="format-description">Convert a video link into an MP4 file.</p>
+          </div>
+          <span class="quality-badge" id="format-badge">MP4 VIDEO</span>
+        </div>
+
+        <form id="convert-form">
+          <label class="field-label" for="video-url">VIDEO LINK</label>
+          <input
+            class="url-input"
+            id="video-url"
+            name="url"
+            type="url"
+            inputmode="url"
+            placeholder="Paste a YouTube link here…"
+            autocomplete="url"
+            required
+          >
+
+          <div class="format-area">
+            <span class="format-label">CHOOSE FORMAT</span>
+            <div class="format-options" role="group" aria-label="Output format">
+              <button class="format-option" type="button" data-format="mp3" aria-pressed="false">
+                <span class="format-icon" aria-hidden="true">MP3</span>
+                <span class="format-copy">
+                  <strong>Audio</strong>
+                  <small>MP3 · 192 kbps</small>
+                </span>
+              </button>
+              <button class="format-option" type="button" data-format="mp4" aria-pressed="true">
+                <span class="format-icon" aria-hidden="true">MP4</span>
+                <span class="format-copy">
+                  <strong>Video</strong>
+                  <small>MP4 · best available quality</small>
+                </span>
+              </button>
+            </div>
+          </div>
+
+          <button class="convert-button" id="submit-button" type="submit">
+            <span id="button-label">Convert to MP4</span>
+            <span class="button-arrow" aria-hidden="true">→</span>
+          </button>
+          <p class="form-status" id="conversion-message" role="status" aria-live="polite"></p>
+        </form>
+      </section>
+
+      <p class="privacy-note">
+        <span class="privacy-icon" aria-hidden="true">◈</span>
+        <span>Conversions run on your local server. FFmpeg must be installed for MP3 extraction and MP4 processing. Only download content you have permission to use.</span>
+      </p>
+
+      <footer class="page-footer">
+        <span>YTMP34 <span aria-hidden="true">·</span> LOCAL MEDIA TOOL</span>
+        <a href="https://ffmpeg.org/download.html" target="_blank" rel="noreferrer">FFmpeg setup ↗</a>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    const form = document.querySelector("#convert-form");
+    const submitButton = document.querySelector("#submit-button");
+    const message = document.querySelector("#conversion-message");
+    const formatDescription = document.querySelector("#format-description");
+    const formatBadge = document.querySelector("#format-badge");
+    const buttonLabel = document.querySelector("#button-label");
+    const formatButtons = [...document.querySelectorAll("[data-format]")];
+    let selectedFormat = "mp4";
+
+    function selectFormat(format) {
+      if (format !== "mp3" && format !== "mp4") return;
+      selectedFormat = format;
+
+      for (const button of formatButtons) {
+        const selected = button.dataset.format === format;
+        if (button.classList.contains("format-option")) {
+          button.setAttribute("aria-pressed", String(selected));
+        } else {
+          button.setAttribute("aria-current", String(selected));
+        }
+      }
+
+      const label = format.toUpperCase();
+      formatDescription.textContent = `Convert a video link into an ${label} ${format === "mp3" ? "audio" : "video"} file.`;
+      formatBadge.textContent = `${label} ${format === "mp3" ? "AUDIO" : "VIDEO"}`;
+      buttonLabel.textContent = `Convert to ${label}`;
+    }
+
+    for (const button of formatButtons) {
+      button.addEventListener("click", () => selectFormat(button.dataset.format));
+    }
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      submitButton.disabled = true;
+      message.dataset.state = "";
+      message.textContent = "Converting your video… this may take a few minutes.";
+
+      try {
+        const response = await fetch("/api/convert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: form.elements.url.value.trim(),
+            format: selectedFormat
+          })
+        });
+
+        if (!response.ok) {
+          let errorMessage = "Conversion failed. Please try again.";
+          try {
+            const result = await response.json();
+            if (result.error) errorMessage = result.error;
+          } catch (error) {
+            if (!(error instanceof SyntaxError)) throw error;
+            errorMessage = `The server returned HTTP ${response.status} without error details. Restart the local server and check its terminal output.`;
+          }
+          throw new Error(errorMessage);
+        }
+
+        const disposition = response.headers.get("Content-Disposition") || "";
+        const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+        const filename = filenameMatch ? filenameMatch[1] : `converted.${selectedFormat}`;
+        const downloadUrl = URL.createObjectURL(await response.blob());
+        const download = document.createElement("a");
+        download.href = downloadUrl;
+        download.download = filename;
+        document.body.append(download);
+        download.click();
+        download.remove();
+        window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+
+        message.dataset.state = "success";
+        message.textContent = "Conversion complete. Your download has started.";
+      } catch (error) {
+        message.dataset.state = "error";
+        message.textContent = error.message || "Unable to reach the local conversion server.";
+      } finally {
+        submitButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
