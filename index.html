@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f5f7">
+  <meta name="description" content="A simple local video converter.">
+  <title>Convert</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      --ink: #202124;
+      --muted: #85858d;
+      --blue: #2865e8;
+      --line: #e5e5eb;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      display: grid;
+      min-width: 320px;
+      min-height: 100vh;
+      margin: 0;
+      padding: 24px;
+      place-items: center;
+      background: #f5f5f7;
+      color: var(--ink);
+    }
+
+    button, input, select { font: inherit; }
+
+    .converter {
+      width: min(100%, 520px);
+      padding: clamp(24px, 6vw, 38px);
+      border: 1px solid rgb(255 255 255 / 90%);
+      border-radius: 22px;
+      background: rgb(255 255 255 / 86%);
+      box-shadow: 0 18px 60px rgb(28 34 54 / 9%), 0 2px 8px rgb(28 34 54 / 4%);
+      backdrop-filter: blur(24px);
+    }
+
+    h1 {
+      margin: 0 0 26px;
+      font-size: 25px;
+      font-weight: 650;
+      letter-spacing: -.055em;
+    }
+
+    .url-wrap { position: relative; }
+    .url-input {
+      width: 100%;
+      min-height: 54px;
+      padding: 0 48px 0 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      outline: none;
+      background: #fff;
+      color: var(--ink);
+      font-size: 14px;
+      transition: border-color 140ms ease, box-shadow 140ms ease;
+    }
+
+    .url-input::placeholder { color: #a2a2aa; }
+    .url-input:focus {
+      border-color: rgb(40 101 232 / 60%);
+      box-shadow: 0 0 0 4px rgb(40 101 232 / 11%);
+    }
+
+    .paste-button {
+      position: absolute;
+      top: 50%;
+      right: 8px;
+      display: grid;
+      width: 36px;
+      height: 36px;
+      transform: translateY(-50%);
+      place-items: center;
+      border: 0;
+      border-radius: 9px;
+      background: transparent;
+      color: #74747c;
+      cursor: pointer;
+    }
+
+    .paste-button svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: currentColor;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-width: 1.6;
+    }
+
+    .paste-button:hover { background: #f1f1f4; color: var(--ink); }
+
+    .options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .segmented {
+      display: grid;
+      min-height: 44px;
+      grid-template-columns: 1fr 1fr;
+      gap: 3px;
+      padding: 3px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: #f1f1f4;
+    }
+
+    .format-button {
+      border: 0;
+      border-radius: 8px;
+      background: transparent;
+      color: #6c6c74;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 580;
+    }
+
+    .format-button[aria-pressed="true"] {
+      background: #fff;
+      color: var(--ink);
+      box-shadow: 0 1px 3px rgb(0 0 0 / 10%);
+    }
+
+    .quality-select {
+      width: 100%;
+      min-height: 44px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      outline: none;
+      background: #fff;
+      color: var(--ink);
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    .quality-select:focus-visible, button:focus-visible {
+      outline: 3px solid rgb(40 101 232 / 30%);
+      outline-offset: 2px;
+    }
+
+    .convert-button {
+      display: flex;
+      width: 100%;
+      min-height: 48px;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      margin-top: 14px;
+      border: 0;
+      border-radius: 11px;
+      background: var(--blue);
+      color: #fff;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 620;
+      transition: background 140ms ease, opacity 140ms ease;
+    }
+
+    .convert-button:hover:not(:disabled) { background: #1e56d4; }
+    .convert-button:disabled { cursor: wait; opacity: .65; }
+    .spinner {
+      display: none;
+      width: 15px;
+      height: 15px;
+      border: 2px solid rgb(255 255 255 / 40%);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 700ms linear infinite;
+    }
+    .convert-button[aria-busy="true"] .spinner { display: inline-block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status {
+      min-height: 18px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-wrap: anywhere;
+      text-align: center;
+    }
+    .status[data-state="error"] { color: #c5221f; }
+    .status[data-state="success"] { color: #16803c; }
+
+    .local-guide {
+      margin-top: 14px;
+      border-top: 1px solid var(--line);
+      color: #65656d;
+      font-size: 12px;
+    }
+
+    .local-guide summary {
+      padding-top: 14px;
+      color: #52525a;
+      cursor: pointer;
+      font-weight: 550;
+    }
+
+    .local-guide ol {
+      display: grid;
+      gap: 10px;
+      margin: 13px 0 0;
+      padding-left: 20px;
+      line-height: 1.6;
+    }
+
+    .local-guide a { color: var(--blue); }
+
+    .local-guide code {
+      padding: 2px 5px;
+      border-radius: 4px;
+      background: #f0f0f4;
+      color: #33333a;
+    }
+
+    @media (max-width: 460px) {
+      body { padding: 16px; }
+      .converter { padding: 23px 18px; border-radius: 18px; }
+      h1 { margin-bottom: 21px; }
+      .options { gap: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="converter" data-local-app="false">
+    <h1>Convert</h1>
+    <form id="convert-form">
+      <div class="url-wrap">
+        <input
+          class="url-input"
+          id="video-url"
+          name="url"
+          type="url"
+          inputmode="url"
+          placeholder="Paste a YouTube link"
+          autocomplete="url"
+          aria-label="YouTube link"
+          required
+        >
+        <button class="paste-button" id="paste-button" type="button" aria-label="Paste from clipboard" title="Paste from clipboard">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="6.5" y="5.5" width="13" height="16" rx="2"></rect>
+            <rect x="9.5" y="2.5" width="7" height="5" rx="1.5"></rect>
+          </svg>
+        </button>
+      </div>
+      <div class="options">
+        <div class="segmented" role="group" aria-label="File format">
+          <button class="format-button" type="button" data-format="mp3" aria-pressed="false">MP3</button>
+          <button class="format-button" type="button" data-format="mp4" aria-pressed="true">MP4</button>
+        </div>
+        <select class="quality-select" id="quality-select" aria-label="Quality"></select>
+      </div>
+      <button class="convert-button" id="submit-button" type="submit" aria-busy="false">
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="button-label">Convert</span>
+      </button>
+      <p class="status" id="conversion-message" role="status" aria-live="polite"></p>
+    </form>
+    <details class="local-guide">
+      <summary>Run on your computer</summary>
+      <ol>
+        <li>Download this repository using GitHub’s <strong>Code → Download ZIP</strong>, then extract it.</li>
+        <li>Install <a href="https://www.python.org/downloads/" target="_blank" rel="noreferrer">Python</a> and <a href="https://ffmpeg.org/download.html" target="_blank" rel="noreferrer">FFmpeg</a>.</li>
+        <li>Open a terminal in the extracted folder and run <code>py run.py</code> on Windows, or <code>python3 run.py</code> on macOS or Linux.</li>
+        <li>Open <code>http://127.0.0.1:5000</code>. Leave the terminal open while converting.</li>
+      </ol>
+    </details>
+  </main>
+
+  <script>
+    const form = document.querySelector("#convert-form");
+    const submitButton = document.querySelector("#submit-button");
+    const message = document.querySelector("#conversion-message");
+    const videoUrl = document.querySelector("#video-url");
+    const qualitySelect = document.querySelector("#quality-select");
+    const formatButtons = [...document.querySelectorAll(".format-button")];
+    const localApp = document.querySelector(".converter").dataset.localApp === "true";
+    let selectedFormat = "mp4";
+    const qualities = {
+      mp3: [
+        { value: "128", label: "128 kbps" },
+        { value: "192", label: "192 kbps" },
+        { value: "320", label: "320 kbps" }
+      ],
+      mp4: [
+        { value: "360", label: "360p" },
+        { value: "480", label: "480p" },
+        { value: "720", label: "720p" },
+        { value: "1080", label: "1080p" },
+        { value: "best", label: "Best" }
+      ]
+    };
+
+    function selectFormat(format) {
+      if (!Object.hasOwn(qualities, format)) return;
+      selectedFormat = format;
+      for (const button of formatButtons) {
+        button.setAttribute("aria-pressed", String(button.dataset.format === format));
+      }
+      qualitySelect.replaceChildren(...qualities[format].map(({ value, label }) => {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        return option;
+      }));
+      qualitySelect.value = format === "mp3" ? "192" : "best";
+    }
+
+    for (const button of formatButtons) {
+      button.addEventListener("click", () => selectFormat(button.dataset.format));
+    }
+
+    document.querySelector("#paste-button").addEventListener("click", async () => {
+      if (!navigator.clipboard?.readText) {
+        message.dataset.state = "error";
+        message.textContent = "Clipboard unavailable. Paste your link into the box.";
+        return;
+      }
+      try {
+        const clipboardText = await navigator.clipboard.readText();
+        if (!clipboardText.trim()) {
+          message.dataset.state = "error";
+          message.textContent = "Clipboard is empty.";
+          return;
+        }
+        videoUrl.value = clipboardText.trim();
+        videoUrl.focus();
+        message.dataset.state = "";
+        message.textContent = "";
+      } catch (error) {
+        message.dataset.state = "error";
+        message.textContent = "Clipboard access denied. Paste your link into the box.";
+      }
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!localApp) return;
+      submitButton.disabled = true;
+      submitButton.setAttribute("aria-busy", "true");
+      message.dataset.state = "";
+      message.textContent = "Converting…";
+
+      try {
+        const response = await fetch("/api/convert", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: videoUrl.value.trim(),
+            format: selectedFormat,
+            quality: qualitySelect.value
+          })
+        });
+
+        if (!response.ok) {
+          let errorMessage = "Conversion failed.";
+          try {
+            const result = await response.json();
+            if (result.error) errorMessage = result.error;
+          } catch (error) {
+            if (!(error instanceof SyntaxError)) throw error;
+          }
+          throw new Error(errorMessage);
+        }
+
+        const disposition = response.headers.get("Content-Disposition") || "";
+        const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+        const filename = filenameMatch ? filenameMatch[1] : `converted.${selectedFormat}`;
+        const downloadUrl = URL.createObjectURL(await response.blob());
+        const download = document.createElement("a");
+        download.href = downloadUrl;
+        download.download = filename;
+        document.body.append(download);
+        download.click();
+        download.remove();
+        window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
+        message.dataset.state = "success";
+        message.textContent = "Download started.";
+      } catch (error) {
+        message.dataset.state = "error";
+        message.textContent = error instanceof Error ? error.message : "Could not reach the local server.";
+      } finally {
+        submitButton.disabled = false;
+        submitButton.setAttribute("aria-busy", "false");
+      }
+    });
+
+    selectFormat(selectedFormat);
+    if (!localApp) {
+      for (const control of form.querySelectorAll("input, button, select")) {
+        control.disabled = true;
+      }
+      message.textContent = "Start the app locally to convert files.";
+    }
+  </script>
+</body>
+</html>

@@ -1,3 +1,4 @@
+import argparse
 from pathlib import Path
 
 
@@ -19,4 +20,12 @@ def build_site(output_directory=ROOT / "_site"):
 
 
 if __name__ == "__main__":
-    build_site()
+    parser = argparse.ArgumentParser(description="Build the GitHub Pages site.")
+    parser.add_argument(
+        "output_directory",
+        nargs="?",
+        type=Path,
+        default=ROOT,
+        help="Directory to write index.html into (defaults to the repository root).",
+    )
+    build_site(parser.parse_args().output_directory)
