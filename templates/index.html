@@ -3,624 +3,427 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#050505">
-  <meta name="description" content="Convert a video link to an MP3 or MP4 file on your own machine.">
-  <title>YTMP34 — Video converter</title>
+  <meta name="theme-color" content="#f5f5f7">
+  <meta name="description" content="A simple, private video converter for media you have permission to download.">
+  <title>YTMP34 — Your media, your way</title>
   <style>
     :root {
-      color-scheme: dark;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #050505;
-      color: #f4f4f4;
+      color-scheme: light;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
       font-synthesis: none;
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
-      --sidebar-width: 252px;
-      --surface: #0a0a0a;
-      --line: #202020;
-      --muted: #858585;
-      --accent: #d5ff75;
+      --ink: #1d1d1f;
+      --secondary: #6e6e73;
+      --blue: #0071e3;
+      --line: rgb(29 29 31 / 9%);
+      --glass: rgb(255 255 255 / 76%);
+      --shadow: 0 24px 80px rgb(35 43 62 / 10%), 0 2px 8px rgb(35 43 62 / 4%);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       min-width: 320px;
       min-height: 100vh;
       margin: 0;
+      color: var(--ink);
       background:
-        radial-gradient(ellipse at 78% 15%, rgb(255 255 255 / 3%), transparent 38%),
-        #050505;
+        radial-gradient(ellipse at 50% 4%, rgb(255 255 255 / 95%), transparent 53%),
+        linear-gradient(145deg, #f7f8fb 0%, #f2f2f7 56%, #eef2f8 100%);
     }
 
-    button,
-    input {
-      font: inherit;
-    }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
 
-    .sidebar {
-      position: fixed;
-      inset: 0 auto 0 0;
-      z-index: 2;
+    .app-shell {
+      width: min(100% - 48px, 1060px);
+      min-height: 100vh;
+      margin: 0 auto;
       display: flex;
-      width: var(--sidebar-width);
       flex-direction: column;
-      padding: 32px 22px 22px;
-      border-right: 1px solid #181818;
-      background: #050505;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 76px;
+      border-bottom: 1px solid var(--line);
     }
 
     .brand {
       display: inline-flex;
-      width: fit-content;
       align-items: center;
       gap: 10px;
-      padding: 3px 9px;
-      color: #f4f4f4;
-      font-size: 14px;
-      font-weight: 650;
-      letter-spacing: -0.04em;
+      color: var(--ink);
+      font-size: 15px;
+      font-weight: 680;
+      letter-spacing: -.035em;
       text-decoration: none;
     }
 
     .brand-mark {
       display: grid;
-      width: 27px;
-      height: 27px;
+      width: 31px;
+      height: 31px;
       place-items: center;
-      border: 1px solid #303030;
-      border-radius: 8px;
-      color: var(--accent);
-      font-size: 12px;
-      font-weight: 750;
-    }
-
-    .nav-caption {
-      margin: 57px 0 11px;
-      padding-left: 10px;
-      color: #666;
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    .navigation {
-      display: grid;
-      gap: 5px;
-    }
-
-    .navigation button {
-      display: flex;
-      width: 100%;
-      min-height: 40px;
-      align-items: center;
-      gap: 11px;
-      padding: 0 10px;
-      border: 1px solid transparent;
-      border-radius: 7px;
-      background: transparent;
-      color: #929292;
-      cursor: pointer;
-      font-size: 12px;
-      font-weight: 520;
-      text-align: left;
-      transition: color 140ms ease, border-color 140ms ease, background 140ms ease;
-    }
-
-    .navigation button:hover {
-      color: #fff;
-    }
-
-    .navigation button[aria-current="true"] {
-      border-color: #242424;
-      background: #101010;
-      color: #f5f5f5;
-    }
-
-    .nav-icon {
-      width: 18px;
-      color: #777;
+      border-radius: 10px;
+      background: linear-gradient(145deg, #242428, #111114);
+      color: white;
       font-size: 13px;
-      text-align: center;
+      font-weight: 750;
+      letter-spacing: -.06em;
+      box-shadow: 0 3px 8px rgb(0 0 0 / 16%);
     }
 
-    .navigation button[aria-current="true"] .nav-icon {
-      color: var(--accent);
-    }
-
-    .sidebar-footer {
-      display: grid;
-      gap: 8px;
-      margin-top: auto;
-      padding: 14px 10px 5px;
-      border-top: 1px solid #1c1c1c;
-    }
-
-    .local-indicator {
-      display: flex;
+    .local-pill {
+      display: inline-flex;
       align-items: center;
-      gap: 8px;
-      color: #c5c5c5;
+      gap: 7px;
+      padding: 8px 11px;
+      border: 1px solid rgb(29 29 31 / 7%);
+      border-radius: 999px;
+      background: rgb(255 255 255 / 62%);
+      color: #525256;
       font-size: 11px;
-      font-weight: 550;
+      font-weight: 560;
+      backdrop-filter: blur(16px);
     }
 
-    .local-indicator::before {
+    .local-pill::before {
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 10px rgb(213 255 117 / 28%);
+      background: #34c759;
+      box-shadow: 0 0 0 3px rgb(52 199 89 / 13%);
       content: "";
     }
 
-    .sidebar-footer small {
-      color: #696969;
-      font-size: 10px;
-      line-height: 1.6;
-    }
-
     main {
-      display: flex;
-      min-height: 100vh;
-      flex-direction: column;
-      margin-left: var(--sidebar-width);
-    }
-
-    .topbar {
-      display: flex;
-      min-height: 68px;
-      align-items: center;
-      justify-content: flex-end;
-      padding: 0 clamp(24px, 5vw, 72px);
-      border-bottom: 1px solid #181818;
-    }
-
-    .topbar-label {
-      color: #858585;
-      font-size: 11px;
-      font-weight: 500;
-      letter-spacing: 0.01em;
-    }
-
-    .topbar-label span {
-      padding: 0 8px;
-      color: #444;
-    }
-
-    .content {
-      width: min(100%, 1020px);
+      width: min(100%, 660px);
       margin: auto;
-      padding: 94px clamp(24px, 8vw, 110px) 110px;
+      padding: 75px 0 62px;
     }
+
+    .hero { margin-bottom: 32px; text-align: center; }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      color: #a4a4a4;
+      gap: 7px;
+      color: #77777c;
       font-size: 11px;
-      font-weight: 550;
+      font-weight: 620;
+      letter-spacing: .105em;
+      text-transform: uppercase;
     }
 
-    .eyebrow-mark {
-      color: var(--accent);
-      font-size: 15px;
-    }
+    .eyebrow-mark { color: var(--blue); font-size: 13px; }
 
     h1 {
-      margin: 21px 0 13px;
-      color: #f6f6f6;
-      font-size: clamp(38px, 5.7vw, 62px);
-      font-weight: 590;
-      letter-spacing: -0.075em;
-      line-height: 1.03;
+      margin: 17px 0 12px;
+      font-size: clamp(42px, 7.2vw, 68px);
+      font-weight: 680;
+      letter-spacing: -.075em;
+      line-height: .99;
     }
 
-    .intro {
-      max-width: 520px;
-      margin: 0;
-      color: #929292;
-      font-size: 14px;
-      line-height: 1.8;
+    .hero p {
+      max-width: 450px;
+      margin: 0 auto;
+      color: var(--secondary);
+      font-size: 15px;
+      line-height: 1.65;
     }
 
-    .converter {
-      margin-top: 38px;
-      padding: clamp(20px, 3vw, 30px);
-      border: 1px solid #262626;
-      border-radius: 12px;
-      background: linear-gradient(145deg, #0d0d0d, #090909 65%);
-      box-shadow: 0 22px 70px rgb(0 0 0 / 35%);
+    .converter-card {
+      padding: clamp(23px, 5vw, 36px);
+      border: 1px solid rgb(255 255 255 / 95%);
+      border-radius: 22px;
+      background: var(--glass);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(28px);
     }
 
     .card-heading {
       display: flex;
       align-items: flex-start;
       justify-content: space-between;
-      gap: 16px;
+      gap: 18px;
       margin-bottom: 26px;
     }
 
     .card-heading h2 {
-      margin: 0 0 6px;
-      color: #ededed;
-      font-size: 14px;
-      font-weight: 580;
-      letter-spacing: -0.025em;
+      margin: 0 0 5px;
+      font-size: 17px;
+      font-weight: 650;
+      letter-spacing: -.035em;
     }
 
     .card-heading p {
       margin: 0;
-      color: #777;
+      color: var(--secondary);
       font-size: 12px;
-      line-height: 1.6;
+      line-height: 1.55;
     }
 
-    .quality-badge {
-      padding: 6px 9px;
-      border: 1px solid #282828;
-      border-radius: 5px;
-      color: #a2a2a2;
+    .format-badge {
+      flex: 0 0 auto;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: #f0f0f2;
+      color: #55555a;
       font-size: 10px;
-      font-weight: 550;
-      white-space: nowrap;
+      font-weight: 680;
+      letter-spacing: .055em;
     }
 
-    .field-label,
-    .format-label {
+    .field-label, .format-label {
       display: block;
       margin: 0 0 9px;
-      color: #bdbdbd;
+      color: #55555a;
       font-size: 11px;
-      font-weight: 550;
+      font-weight: 650;
     }
+
+    .input-wrap { position: relative; }
 
     .url-input {
       width: 100%;
-      min-height: 48px;
-      padding: 0 14px;
-      border: 1px solid #303030;
-      border-radius: 7px;
+      min-height: 54px;
+      padding: 0 88px 0 15px;
+      border: 1px solid rgb(29 29 31 / 12%);
+      border-radius: 12px;
       outline: none;
-      background: #070707;
-      color: #f1f1f1;
-      font-size: 13px;
-      transition: border-color 140ms ease, box-shadow 140ms ease;
+      background: rgb(255 255 255 / 88%);
+      color: var(--ink);
+      font-size: 14px;
+      transition: border-color 160ms ease, box-shadow 160ms ease;
     }
 
-    .url-input::placeholder {
-      color: #606060;
-    }
+    .url-input::placeholder { color: #a1a1a6; }
 
     .url-input:focus {
-      border-color: #727272;
-      box-shadow: 0 0 0 3px rgb(255 255 255 / 4%);
+      border-color: rgb(0 113 227 / 70%);
+      box-shadow: 0 0 0 4px rgb(0 113 227 / 12%);
     }
 
-    .format-area {
-      margin-top: 23px;
+    .paste-button {
+      position: absolute;
+      top: 50%;
+      right: 9px;
+      min-height: 34px;
+      padding: 0 11px;
+      transform: translateY(-50%);
+      border: 0;
+      border-radius: 8px;
+      background: #f0f0f2;
+      color: #4a4a4f;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      transition: background 140ms ease;
     }
+
+    .paste-button:hover { background: #e5e5e8; }
+    .paste-button:focus-visible, .format-option:focus-visible, .convert-button:focus-visible {
+      outline: 3px solid rgb(0 113 227 / 35%);
+      outline-offset: 2px;
+    }
+
+    .format-area { margin-top: 23px; }
 
     .format-options {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
+      gap: 11px;
     }
 
     .format-option {
       display: flex;
-      min-height: 67px;
+      min-height: 77px;
       align-items: center;
       gap: 12px;
-      padding: 12px 14px;
-      border: 1px solid #282828;
-      border-radius: 8px;
-      background: #080808;
-      color: #e9e9e9;
+      padding: 13px;
+      border: 1px solid rgb(29 29 31 / 10%);
+      border-radius: 13px;
+      background: rgb(255 255 255 / 58%);
+      color: var(--ink);
       cursor: pointer;
       text-align: left;
-      transition: border-color 140ms ease, background 140ms ease;
+      transition: border-color 150ms ease, background 150ms ease, box-shadow 150ms ease;
     }
 
-    .format-option:hover {
-      border-color: #454545;
-    }
+    .format-option:hover { border-color: rgb(29 29 31 / 22%); }
 
     .format-option[aria-pressed="true"] {
-      border-color: #777;
-      background: #111;
-      box-shadow: inset 0 0 0 1px rgb(255 255 255 / 2%);
+      border-color: rgb(0 113 227 / 64%);
+      background: #f5faff;
+      box-shadow: inset 0 0 0 1px rgb(0 113 227 / 10%);
     }
 
     .format-icon {
       display: grid;
-      width: 34px;
-      height: 34px;
+      width: 39px;
+      height: 39px;
       flex: 0 0 auto;
       place-items: center;
-      border: 1px solid #282828;
-      border-radius: 7px;
-      color: var(--accent);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: -0.04em;
-    }
-
-    .format-copy {
-      display: grid;
-      gap: 4px;
-    }
-
-    .format-copy strong {
-      color: #e8e8e8;
-      font-size: 12px;
-      font-weight: 580;
-    }
-
-    .format-copy small {
-      color: #777;
+      border-radius: 11px;
+      background: #f1f1f3;
+      color: #303035;
       font-size: 10px;
+      font-weight: 750;
+      letter-spacing: -.02em;
     }
+
+    .format-option[aria-pressed="true"] .format-icon {
+      background: #e2f1ff;
+      color: #0066cc;
+    }
+
+    .format-copy { display: grid; gap: 4px; }
+    .format-copy strong { font-size: 12px; font-weight: 650; }
+    .format-copy small { color: var(--secondary); font-size: 10px; line-height: 1.4; }
 
     .convert-button {
       display: flex;
       width: 100%;
-      min-height: 47px;
+      min-height: 51px;
       align-items: center;
       justify-content: center;
-      gap: 8px;
+      gap: 9px;
       margin-top: 22px;
-      border: 1px solid var(--accent);
-      border-radius: 7px;
-      background: var(--accent);
-      color: #111;
+      border: 0;
+      border-radius: 12px;
+      background: var(--blue);
+      color: white;
       cursor: pointer;
-      font-size: 12px;
+      font-size: 13px;
       font-weight: 650;
-      transition: background 140ms ease, transform 140ms ease, opacity 140ms ease;
+      box-shadow: 0 5px 13px rgb(0 113 227 / 20%);
+      transition: background 150ms ease, transform 150ms ease, opacity 150ms ease;
     }
 
-    .convert-button:hover:not(:disabled) {
-      background: #e2ff9f;
-      transform: translateY(-1px);
+    .convert-button:hover:not(:disabled) { background: #0077ed; transform: translateY(-1px); }
+    .convert-button:disabled { cursor: wait; opacity: .78; }
+
+    .button-arrow { font-size: 17px; font-weight: 400; }
+
+    .spinner {
+      display: none;
+      width: 15px;
+      height: 15px;
+      border: 2px solid rgb(255 255 255 / 40%);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 750ms linear infinite;
     }
 
-    .convert-button:disabled {
-      cursor: wait;
-      opacity: 0.7;
-    }
-
-    .button-arrow {
-      font-size: 16px;
-      font-weight: 450;
-    }
+    .convert-button[aria-busy="true"] .spinner { display: inline-block; }
+    .convert-button[aria-busy="true"] .button-arrow { display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .form-status {
       min-height: 18px;
       margin: 13px 0 0;
-      color: #929292;
+      color: var(--secondary);
       font-size: 11px;
-      line-height: 1.65;
+      line-height: 1.6;
+      text-align: center;
     }
 
-    .form-status[data-state="error"] {
-      color: #ff9696;
-    }
-
-    .form-status[data-state="success"] {
-      color: var(--accent);
-    }
+    .form-status[data-state="error"] { color: #c5221f; }
+    .form-status[data-state="success"] { color: #16803c; }
 
     .privacy-note {
       display: flex;
       align-items: flex-start;
       gap: 9px;
-      margin: 17px 2px 0;
-      color: #777;
+      max-width: 560px;
+      margin: 18px auto 0;
+      color: #737378;
       font-size: 10px;
-      line-height: 1.75;
+      line-height: 1.7;
     }
 
-    .privacy-icon {
-      flex: 0 0 auto;
-      color: #aaa;
-    }
+    .privacy-icon { flex: 0 0 auto; color: #66666b; }
 
     .page-footer {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-top: 46px;
-      color: #5f5f5f;
+      margin-top: 34px;
+      color: #88888d;
       font-size: 10px;
     }
 
-    .page-footer a {
-      color: #888;
-      text-decoration: none;
+    .page-footer a { color: #626267; text-decoration: none; }
+    .page-footer a:hover { color: var(--blue); }
+
+    @media (max-width: 560px) {
+      .app-shell { width: min(100% - 32px, 1060px); }
+      .topbar { min-height: 66px; }
+      main { padding: 58px 0 36px; }
+      .hero { margin-bottom: 27px; }
+      .hero p { max-width: 340px; font-size: 14px; }
+      .converter-card { border-radius: 18px; }
+      .card-heading { flex-direction: column; gap: 12px; margin-bottom: 22px; }
+      .format-options { grid-template-columns: 1fr; gap: 8px; }
+      .format-option { min-height: 66px; }
+      .page-footer { align-items: flex-start; flex-direction: column; margin-top: 28px; }
     }
 
-    .page-footer a:hover {
-      color: #ddd;
-    }
-
-    @media (min-width: 1100px) {
-      .content {
-        padding-right: 100px;
-        padding-left: 100px;
-      }
-    }
-
-    @media (max-width: 700px) {
-      :root {
-        --sidebar-width: 0px;
-      }
-
-      .sidebar {
-        position: sticky;
-        top: 0;
-        width: 100%;
-        height: auto;
-        flex-direction: row;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        padding: 12px 16px;
-        border-right: 0;
-        border-bottom: 1px solid #1c1c1c;
-      }
-
-      .brand {
-        gap: 8px;
-        padding-left: 0;
-      }
-
-      .nav-caption,
-      .sidebar-footer {
-        display: none;
-      }
-
-      .navigation {
-        display: flex;
-        gap: 5px;
-      }
-
-      .navigation button {
-        width: auto;
-        min-height: 35px;
-        gap: 6px;
-        padding: 0 8px;
-        font-size: 10px;
-      }
-
-      .nav-icon {
-        width: auto;
-        font-size: 11px;
-      }
-
-      main {
-        min-height: calc(100vh - 59px);
-      }
-
-      .topbar {
-        min-height: 48px;
-        padding: 0 20px;
-      }
-
-      .content {
-        width: 100%;
-        padding: 75px 24px 54px;
-      }
-    }
-
-    @media (max-width: 440px) {
-      .brand {
-        font-size: 12px;
-      }
-
-      .brand-mark {
-        width: 25px;
-        height: 25px;
-      }
-
-      .navigation {
-        gap: 3px;
-      }
-
-      .navigation button {
-        min-height: 32px;
-        gap: 4px;
-        padding: 0 6px;
-        font-size: 9px;
-      }
-
-      .format-options {
-        grid-template-columns: 1fr;
-      }
-
-      .format-option {
-        min-height: 59px;
-      }
-
-      .card-heading {
-        flex-direction: column;
-      }
-
-      .content {
-        padding: 58px 18px 40px;
-      }
-
-      .page-footer {
-        align-items: flex-start;
-        flex-direction: column;
-      }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
     }
   </style>
 </head>
 <body>
-  <aside class="sidebar">
-    <a class="brand" href="/" aria-label="YTMP34 home">
-      <span class="brand-mark" aria-hidden="true">Y</span>
-      <span>ytmp34</span>
-    </a>
-
-    <p class="nav-caption">Converter</p>
-    <nav class="navigation" aria-label="Choose conversion format">
-      <button type="button" data-format="mp3" aria-current="false">
-        <span class="nav-icon" aria-hidden="true">♫</span>
-        YouTube to MP3
-      </button>
-      <button type="button" data-format="mp4" aria-current="true">
-        <span class="nav-icon" aria-hidden="true">▶</span>
-        YouTube to MP4
-      </button>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="local-indicator">Running locally</div>
-      <small>Your conversions are processed by this application.</small>
-    </div>
-  </aside>
-
-  <main>
+  <div class="app-shell">
     <header class="topbar">
-      <div class="topbar-label">Tools <span>/</span> Video converter</div>
+      <a class="brand" href="/" aria-label="YTMP34 home">
+        <span class="brand-mark" aria-hidden="true">Y</span>
+        <span>ytmp34</span>
+      </a>
+      <span class="local-pill">Private, local conversions</span>
     </header>
 
-    <div class="content">
-      <div class="eyebrow"><span class="eyebrow-mark" aria-hidden="true">✳</span> SIMPLE VIDEO CONVERSION</div>
-      <h1>Video to file.<br>Ready when you are.</h1>
-      <p class="intro">Paste a video link, choose your format, and save it straight to your device. No extra steps.</p>
+    <main>
+      <section class="hero" aria-labelledby="page-title">
+        <span class="eyebrow"><span class="eyebrow-mark" aria-hidden="true">✳</span> YOUR MEDIA, YOUR WAY</span>
+        <h1 id="page-title">Make it yours.</h1>
+        <p>Turn a video into a file you can keep. Simple, private, and ready in just a moment.</p>
+      </section>
 
-      <section class="converter" aria-labelledby="converter-title">
+      <section class="converter-card" aria-labelledby="converter-title">
         <div class="card-heading">
           <div>
-            <h2 id="converter-title">Start a conversion</h2>
-            <p id="format-description">Convert a video link into an MP4 file.</p>
+            <h2 id="converter-title">Create your download</h2>
+            <p id="format-description">Save a video as an MP4 file.</p>
           </div>
-          <span class="quality-badge" id="format-badge">MP4 VIDEO</span>
+          <span class="format-badge" id="format-badge">MP4 VIDEO</span>
         </div>
 
         <form id="convert-form">
           <label class="field-label" for="video-url">VIDEO LINK</label>
-          <input
-            class="url-input"
-            id="video-url"
-            name="url"
-            type="url"
-            inputmode="url"
-            placeholder="Paste a YouTube link here…"
-            autocomplete="url"
-            required
-          >
+          <div class="input-wrap">
+            <input
+              class="url-input"
+              id="video-url"
+              name="url"
+              type="url"
+              inputmode="url"
+              placeholder="Paste a YouTube link"
+              autocomplete="url"
+              required
+            >
+            <button class="paste-button" id="paste-button" type="button">Paste</button>
+          </div>
 
           <div class="format-area">
-            <span class="format-label">CHOOSE FORMAT</span>
+            <span class="format-label">CHOOSE A FORMAT</span>
             <div class="format-options" role="group" aria-label="Output format">
               <button class="format-option" type="button" data-format="mp3" aria-pressed="false">
                 <span class="format-icon" aria-hidden="true">MP3</span>
@@ -639,9 +442,10 @@
             </div>
           </div>
 
-          <button class="convert-button" id="submit-button" type="submit">
+          <button class="convert-button" id="submit-button" type="submit" aria-busy="false">
             <span id="button-label">Convert to MP4</span>
-            <span class="button-arrow" aria-hidden="true">→</span>
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="button-arrow" aria-hidden="true">↑</span>
           </button>
           <p class="form-status" id="conversion-message" role="status" aria-live="polite"></p>
         </form>
@@ -649,15 +453,15 @@
 
       <p class="privacy-note">
         <span class="privacy-icon" aria-hidden="true">◈</span>
-        <span>Conversions run on your local server. FFmpeg must be installed for MP3 extraction and MP4 processing. Only download content you have permission to use.</span>
+        <span>Conversions run on your local server. FFmpeg is required. Only download content you own or have permission to use, and follow YouTube’s terms.</span>
       </p>
 
       <footer class="page-footer">
         <span>YTMP34 <span aria-hidden="true">·</span> LOCAL MEDIA TOOL</span>
         <a href="https://ffmpeg.org/download.html" target="_blank" rel="noreferrer">FFmpeg setup ↗</a>
       </footer>
-    </div>
-  </main>
+    </main>
+  </div>
 
   <script>
     const form = document.querySelector("#convert-form");
@@ -666,7 +470,8 @@
     const formatDescription = document.querySelector("#format-description");
     const formatBadge = document.querySelector("#format-badge");
     const buttonLabel = document.querySelector("#button-label");
-    const formatButtons = [...document.querySelectorAll("[data-format]")];
+    const videoUrl = document.querySelector("#video-url");
+    const formatButtons = [...document.querySelectorAll(".format-option")];
     let selectedFormat = "mp4";
 
     function selectFormat(format) {
@@ -674,16 +479,12 @@
       selectedFormat = format;
 
       for (const button of formatButtons) {
-        const selected = button.dataset.format === format;
-        if (button.classList.contains("format-option")) {
-          button.setAttribute("aria-pressed", String(selected));
-        } else {
-          button.setAttribute("aria-current", String(selected));
-        }
+        button.setAttribute("aria-pressed", String(button.dataset.format === format));
       }
 
       const label = format.toUpperCase();
-      formatDescription.textContent = `Convert a video link into an ${label} ${format === "mp3" ? "audio" : "video"} file.`;
+      const mediaType = format === "mp3" ? "audio" : "video";
+      formatDescription.textContent = `Save ${mediaType === "audio" ? "audio" : "a video"} as an ${label} file.`;
       formatBadge.textContent = `${label} ${format === "mp3" ? "AUDIO" : "VIDEO"}`;
       buttonLabel.textContent = `Convert to ${label}`;
     }
@@ -692,20 +493,43 @@
       button.addEventListener("click", () => selectFormat(button.dataset.format));
     }
 
+    document.querySelector("#paste-button").addEventListener("click", async (event) => {
+      const pasteButton = event.currentTarget;
+      if (!navigator.clipboard?.readText) {
+        message.dataset.state = "error";
+        message.textContent = "Clipboard access is unavailable. Paste your link into the field instead.";
+        return;
+      }
+
+      try {
+        const clipboardText = await navigator.clipboard.readText();
+        if (!clipboardText.trim()) {
+          message.dataset.state = "error";
+          message.textContent = "Your clipboard is empty.";
+          return;
+        }
+        videoUrl.value = clipboardText.trim();
+        videoUrl.focus();
+        message.dataset.state = "";
+        message.textContent = "Link pasted. Choose a format to continue.";
+      } catch (error) {
+        message.dataset.state = "error";
+        message.textContent = "Clipboard access was denied. Paste your link into the field instead.";
+      }
+    });
+
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       submitButton.disabled = true;
+      submitButton.setAttribute("aria-busy", "true");
       message.dataset.state = "";
-      message.textContent = "Converting your video… this may take a few minutes.";
+      message.textContent = "Preparing your file… this may take a few minutes.";
 
       try {
         const response = await fetch("/api/convert", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            url: form.elements.url.value.trim(),
-            format: selectedFormat
-          })
+          body: JSON.stringify({ url: videoUrl.value.trim(), format: selectedFormat })
         });
 
         if (!response.ok) {
@@ -715,7 +539,7 @@
             if (result.error) errorMessage = result.error;
           } catch (error) {
             if (!(error instanceof SyntaxError)) throw error;
-            errorMessage = `The server returned HTTP ${response.status} without error details. Restart the local server and check its terminal output.`;
+            errorMessage = `The server returned HTTP ${response.status} without error details. Check the local server output.`;
           }
           throw new Error(errorMessage);
         }
@@ -733,12 +557,13 @@
         window.setTimeout(() => URL.revokeObjectURL(downloadUrl), 1000);
 
         message.dataset.state = "success";
-        message.textContent = "Conversion complete. Your download has started.";
+        message.textContent = "All set. Your download has started.";
       } catch (error) {
         message.dataset.state = "error";
-        message.textContent = error.message || "Unable to reach the local conversion server.";
+        message.textContent = error instanceof Error ? error.message : "Unable to reach the local conversion server.";
       } finally {
         submitButton.disabled = false;
+        submitButton.setAttribute("aria-busy", "false");
       }
     });
   </script>

@@ -75,6 +75,16 @@ OUTPUT_FORMATS = {
     },
 }
 
+SUPPORTED_VIDEO_HOSTS = {
+    "youtu.be",
+    "youtube.com",
+    "www.youtube.com",
+    "m.youtube.com",
+    "music.youtube.com",
+    "youtube-nocookie.com",
+    "www.youtube-nocookie.com",
+}
+
 
 @app.get("/")
 def index():
@@ -156,9 +166,20 @@ def convert():
     output_format = payload.get("format", "mp4")
     if not isinstance(url, str) or not url.strip():
         return jsonify(error="A video URL is required."), 400
-    parsed_url = urlparse(url.strip())
-    if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
-        return jsonify(error="Enter a valid HTTP or HTTPS video URL."), 400
+    try:
+        parsed_url = urlparse(url.strip())
+        hostname = (parsed_url.hostname or "").lower().rstrip(".")
+        port = parsed_url.port
+    except ValueError:
+        return jsonify(error="Enter a valid YouTube video URL."), 400
+    if (
+        parsed_url.scheme not in {"http", "https"}
+        or hostname not in SUPPORTED_VIDEO_HOSTS
+        or parsed_url.username is not None
+        or parsed_url.password is not None
+        or port not in {None, 80, 443}
+    ):
+        return jsonify(error="Enter a valid link from YouTube or youtu.be."), 400
     if not isinstance(output_format, str) or output_format not in OUTPUT_FORMATS:
         return jsonify(error="Choose either mp3 or mp4 as the output format."), 400
     if shutil.which("ffmpeg") is None:
@@ -193,6 +214,7 @@ def convert():
 
         @after_this_request
         def schedule_temporary_file_cleanup(response):
+            response.direct_passthrough = False
             response.call_on_close(lambda: shutil.rmtree(temporary_directory))
             return response
 
