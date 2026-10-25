@@ -9,9 +9,7 @@ REQUIREMENTS = ROOT / "server" / "requirements.txt"
 BACKEND = ROOT / "server" / "app.py"
 DEPENDENCIES = {
     "flask": "flask",
-    "flask_cors": "flask-cors",
     "yt_dlp": "yt-dlp",
-    "gunicorn": "gunicorn",
 }
 
 
@@ -39,7 +37,8 @@ def main():
         raise FileNotFoundError(f"Backend file not found: {BACKEND}")
 
     install_missing_dependencies()
-    print("Starting the application at http://127.0.0.1:5000", flush=True)
+    print("Open http://127.0.0.1:5000 in your browser.", flush=True)
+    print("Keep this window open while you use the converter.", flush=True)
     process = subprocess.Popen(
         [sys.executable, str(BACKEND)],
         cwd=ROOT,

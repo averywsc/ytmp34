@@ -7,14 +7,12 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import Flask, after_this_request, jsonify, render_template, request, send_file
-from flask_cors import CORS
 from yt_dlp import YoutubeDL
 from yt_dlp.utils import DownloadError
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 app = Flask(__name__, template_folder=str(PROJECT_ROOT / "templates"))
-CORS(app, resources={r"/api/*": {"origins": "*"}})
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -75,6 +73,9 @@ OUTPUT_FORMATS = {
     },
 }
 
+MP3_QUALITIES = {"128", "192", "320"}
+MP4_QUALITIES = {"360", "480", "720", "1080", "best"}
+
 SUPPORTED_VIDEO_HOSTS = {
     "youtu.be",
     "youtube.com",
@@ -88,7 +89,12 @@ SUPPORTED_VIDEO_HOSTS = {
 
 @app.get("/")
 def index():
-    return render_template("index.html", screenplays=SCREENPLAYS)
+    return render_template("index.html", local_app="true")
+
+
+@app.get("/health")
+def health():
+    return jsonify(status="ok")
 
 
 def build_script_pdf(screenplay):
@@ -164,6 +170,7 @@ def convert():
 
     url = payload.get("url", "")
     output_format = payload.get("format", "mp4")
+    quality = payload.get("quality")
     if not isinstance(url, str) or not url.strip():
         return jsonify(error="A video URL is required."), 400
     try:
@@ -182,18 +189,33 @@ def convert():
         return jsonify(error="Enter a valid link from YouTube or youtu.be."), 400
     if not isinstance(output_format, str) or output_format not in OUTPUT_FORMATS:
         return jsonify(error="Choose either mp3 or mp4 as the output format."), 400
+    if quality is None:
+        quality = "192" if output_format == "mp3" else "best"
+    allowed_qualities = MP3_QUALITIES if output_format == "mp3" else MP4_QUALITIES
+    if not isinstance(quality, str) or quality not in allowed_qualities:
+        return jsonify(error="Choose a supported quality for the selected format."), 400
     if shutil.which("ffmpeg") is None:
         return jsonify(error="FFmpeg is required. Install FFmpeg and make it available on PATH."), 503
 
     temporary_directory = Path(tempfile.mkdtemp(prefix="ytmp34-"))
     configuration = OUTPUT_FORMATS[output_format]
+    output_format_selector = (
+        f"bestvideo[height<={quality}]+bestaudio/best[height<={quality}]"
+        if output_format == "mp4" and quality != "best"
+        else "bestvideo+bestaudio/best"
+        if output_format == "mp4"
+        else "bestaudio/best"
+    )
+    postprocessor = configuration["postprocessor"].copy()
+    if output_format == "mp3":
+        postprocessor["preferredquality"] = quality
     options = {
-        "format": "bestvideo+bestaudio/best" if output_format == "mp4" else "bestaudio/best",
+        "format": output_format_selector,
         "outtmpl": str(temporary_directory / "converted.%(ext)s"),
         "noplaylist": True,
         "quiet": True,
         "no_warnings": True,
-        "postprocessors": [configuration["postprocessor"]],
+        "postprocessors": [postprocessor],
     }
     if output_format == "mp4":
         options["merge_output_format"] = "mp4"
